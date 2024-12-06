@@ -9,24 +9,24 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(User::Table)
+                    .table(Users::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(User::Id)
+                    .col(ColumnDef::new(Users::Id)
                         .uuid()
                         .not_null()
                         .primary_key())
-                    .col(ColumnDef::new(User::Username)
+                    .col(ColumnDef::new(Users::Username)
                         .string()
                         .not_null()
                         .unique_key())
-                    .col(ColumnDef::new(User::Email)
+                    .col(ColumnDef::new(Users::Email)
                         .string()
                         .not_null()
                         .unique_key())
-                    .col(ColumnDef::new(User::HashedPassword)
+                    .col(ColumnDef::new(Users::HashedPassword)
                         .string()
                         .not_null())
-                    .col(ColumnDef::new(User::CreatedAt)
+                    .col(ColumnDef::new(Users::CreatedAt)
                         .date_time()
                         .not_null()
                         .default("now()".to_string())
@@ -37,12 +37,12 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(User::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(Users::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum User {
+pub enum Users {
     Table,
     Id,
     Username,
