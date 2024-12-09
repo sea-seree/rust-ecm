@@ -18,6 +18,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::new(db.clone())) 
             .configure(routes::configure_auth_routes)
+            .configure(routes::configure_product_routes)
     })
     .bind("127.0.0.1:8080")?
     .run()
