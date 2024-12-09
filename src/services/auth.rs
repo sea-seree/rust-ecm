@@ -14,8 +14,15 @@ pub fn hash_password(password: &str) -> String {
 }
 
 pub fn verify_password(password: &str, hashed: &str) -> bool {
-    verify(password, hashed).unwrap_or(false)
+    match verify(password, hashed) {
+        Ok(valid) => valid,
+        Err(err) => {
+            println!("Error verifying password: {:?}", err); // Log ข้อผิดพลาด
+            false
+        }
+    }
 }
+
 
 pub fn generate_jwt(user_id: &str) -> String {
     let secret = env::var("JWT_SECRET").expect("JWT_SECRET not set");

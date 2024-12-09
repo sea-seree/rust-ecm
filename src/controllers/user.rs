@@ -18,6 +18,7 @@ pub async fn register(data: web::Json<RegisterData>, db: web::Data<DatabaseConne
         username: Set(data.username.clone()),
         email: Set(data.email.clone()),
         hashed_password: Set(hashed_password),
+        created_at: Set(chrono::Utc::now()),
         ..Default::default()
     };
 

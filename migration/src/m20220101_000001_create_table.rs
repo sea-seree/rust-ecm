@@ -27,9 +27,8 @@ impl MigrationTrait for Migration {
                         .string()
                         .not_null())
                     .col(ColumnDef::new(Users::CreatedAt)
-                        .date_time()
+                        .timestamp_with_time_zone()
                         .not_null()
-                        .default("now()".to_string())
                     )
                     .to_owned(),
             )
