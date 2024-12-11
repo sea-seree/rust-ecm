@@ -1,5 +1,5 @@
 use bcrypt::{hash, verify};
-use jsonwebtoken::{encode, Header, EncodingKey};
+use jsonwebtoken::{encode, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
 use std::env;
 
@@ -29,13 +29,16 @@ pub fn verify_password(password: &str, hashed: &str) -> bool {
     }
 }
 
-
 pub fn generate_jwt(user_id: &str) -> String {
     let secret = env::var("JWT_SECRET").expect("JWT_SECRET not set");
     let claims = Claims {
         sub: user_id.to_owned(),
         exp: chrono::Utc::now().timestamp() as usize + 3600, // 1 ชั่วโมง
     };
-    encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes()))
-        .expect("Failed to generate token")
+    encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(secret.as_bytes()),
+    )
+    .expect("Failed to generate token")
 }

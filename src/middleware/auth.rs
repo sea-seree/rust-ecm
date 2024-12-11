@@ -1,15 +1,14 @@
+use crate::services::auth::Claims;
 use actix_web::{
-    dev::{Service, ServiceRequest, ServiceResponse, Transform},
     body::BoxBody,
+    dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error, HttpMessage, HttpResponse,
 };
 use futures_util::future::{ok, LocalBoxFuture, Ready};
 use jsonwebtoken::{decode, DecodingKey, Validation};
 use serde::Deserialize;
-use std::task::{Context, Poll};
 use std::sync::Arc;
-use crate::services::auth::Claims;
-
+use std::task::{Context, Poll};
 
 #[derive(Debug, Deserialize)]
 
@@ -74,19 +73,19 @@ where
                         ) {
                             Ok(decoded) => {
                                 // เพิ่ม User ID ลงใน Extensions
-                                req.extensions_mut().insert(decoded.claims.get_sub().to_string());
+                                req.extensions_mut()
+                                    .insert(decoded.claims.get_sub().to_string());
 
                                 // ส่งต่อ Request ไปยัง Service
                                 let response = service.call(req).await;
                                 return response.map(|res| res.map_into_boxed_body());
                             }
                             Err(_) => {
-                                return Ok(req
-                                    .into_response(
-                                        HttpResponse::Unauthorized()
-                                            .body("Invalid or expired token")
-                                            .map_into_boxed_body(),
-                                    ));
+                                return Ok(req.into_response(
+                                    HttpResponse::Unauthorized()
+                                        .body("Invalid or expired token")
+                                        .map_into_boxed_body(),
+                                ));
                             }
                         }
                     }

@@ -1,25 +1,28 @@
 use actix_web::{
-    // dev::ServiceRequest, 
-    // error::ErrorUnauthorized, 
-    web, App, HttpServer,
-    // Error, 
-    // HttpMessage, 
-    };
+    // dev::ServiceRequest,
+    // error::ErrorUnauthorized,
+    web,
+    App,
+    HttpServer,
+    // Error,
+    // HttpMessage,
+};
 use dotenv::dotenv;
-use std::env;
-use sea_orm::Database;
 use middleware::auth::AuthMiddleware;
+use sea_orm::Database;
+use std::env;
 
 // lib
 // use actix_web_httpauth::{extractors::bearer::BearerAuth, middleware::HttpAuthentication};
 // use jsonwebtoken::{decode, DecodingKey, Validation};
 // use actix_web::middleware::Condition;
 
+mod controllers;
+mod entity;
+mod error;
 mod middleware;
 mod routes;
 mod services;
-mod controllers;
-mod entity;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -28,7 +31,7 @@ async fn main() -> std::io::Result<()> {
         Ok(url) => url,
         Err(_) => {
             eprintln!("DATABASE_URL must be set");
-            std::process::exit(1); 
+            std::process::exit(1);
         }
     };
 
@@ -36,7 +39,7 @@ async fn main() -> std::io::Result<()> {
         Ok(conn) => conn,
         Err(e) => {
             eprintln!("Failed to connect to the database: {}", e);
-            std::process::exit(1); 
+            std::process::exit(1);
         }
     };
 
@@ -52,7 +55,6 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-
 // async fn validator(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, (Error, ServiceRequest)> {
 //     // ข้ามการตรวจสอบ token สำหรับ routes ลงทะเบียนและ login
 //     if req.path().starts_with("/auth/register") || req.path().starts_with("/auth/login") {
@@ -62,7 +64,7 @@ async fn main() -> std::io::Result<()> {
 //     // ตรวจสอบ token สำหรับ routes อื่นๆ
 //     let token = credentials.token();
 //     let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET not set");
-    
+
 //     match decode::<Claims>(
 //         token,
 //         &DecodingKey::from_secret(secret.as_bytes()),

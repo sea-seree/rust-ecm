@@ -1,8 +1,8 @@
-use actix_web::{web, HttpResponse};
-use serde::Deserialize;
-use crate::services::auth::{hash_password, verify_password, generate_jwt};
 use crate::entity::users::{self, ActiveModel};
+use crate::services::auth::{generate_jwt, hash_password, verify_password};
+use actix_web::{web, HttpResponse};
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct RegisterData {
@@ -11,7 +11,10 @@ pub struct RegisterData {
     pub password: String,
 }
 
-pub async fn register(data: web::Json<RegisterData>, db: web::Data<DatabaseConnection>) -> HttpResponse {
+pub async fn register(
+    data: web::Json<RegisterData>,
+    db: web::Data<DatabaseConnection>,
+) -> HttpResponse {
     let hashed_password = hash_password(&data.password);
     let new_user = ActiveModel {
         id: Set(uuid::Uuid::new_v4()),

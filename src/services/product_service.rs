@@ -1,17 +1,14 @@
-use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, Set, DbErr};
 use crate::entity::products;
 use rust_decimal::Decimal;
+use sea_orm::{ActiveModelTrait, DatabaseConnection, DbErr, EntityTrait, Set};
 
-
-pub async fn get_all_products(
-    db: &DatabaseConnection
-) -> Result<Vec<products::Model>, DbErr> {
+pub async fn get_all_products(db: &DatabaseConnection) -> Result<Vec<products::Model>, DbErr> {
     products::Entity::find().all(db).await
 }
 
 pub async fn get_product_by_id(
     db: &DatabaseConnection,
-    product_id: uuid::Uuid
+    product_id: uuid::Uuid,
 ) -> Result<Option<products::Model>, DbErr> {
     products::Entity::find_by_id(product_id).one(db).await
 }
@@ -23,7 +20,6 @@ pub async fn create_product(
     price: Decimal,
     status: Option<String>,
 ) -> Result<products::Model, DbErr> {
-
     let new_product = products::ActiveModel {
         id: Set(uuid::Uuid::new_v4()),
         name: Set(name),
@@ -73,10 +69,7 @@ pub async fn update_product_status(
     Ok(())
 }
 
-pub async fn delete_product(
-    db: &DatabaseConnection,
-    product_id: uuid::Uuid,
-) -> Result<(), DbErr> {
+pub async fn delete_product(db: &DatabaseConnection, product_id: uuid::Uuid) -> Result<(), DbErr> {
     if let Some(product) = products::Entity::find_by_id(product_id).one(db).await? {
         let active_model: products::ActiveModel = product.into(); // แปลง Model เป็น ActiveModel
         active_model.delete(db).await.map(|_| ()) // ลบ Record
