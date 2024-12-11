@@ -21,16 +21,26 @@ mod services;
 mod controllers;
 mod entity;
 
-
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let db = Database::connect(&database_url).await.unwrap();
+    let database_url = match env::var("DATABASE_URL") {
+        Ok(url) => url,
+        Err(_) => {
+            eprintln!("DATABASE_URL must be set");
+            std::process::exit(1); 
+        }
+    };
+
+    let db = match Database::connect(&database_url).await {
+        Ok(conn) => conn,
+        Err(e) => {
+            eprintln!("Failed to connect to the database: {}", e);
+            std::process::exit(1); 
+        }
+    };
 
     HttpServer::new(move || {
-        // let auth = HttpAuthentication::bearer(validator);
         App::new()
             .app_data(web::Data::new(db.clone()))
             .configure(routes::configure_auth_routes)
@@ -41,6 +51,7 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
 }
+
 
 // async fn validator(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, (Error, ServiceRequest)> {
 //     // ข้ามการตรวจสอบ token สำหรับ routes ลงทะเบียนและ login
