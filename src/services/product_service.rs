@@ -21,6 +21,7 @@ pub async fn create_product(
     name: String,
     description: Option<String>,
     price: Decimal,
+    status: Option<String>,
 ) -> Result<products::Model, DbErr> {
 
     let new_product = products::ActiveModel {
@@ -28,6 +29,7 @@ pub async fn create_product(
         name: Set(name),
         description: Set(description),
         price: Set(price),
+        status: Set(status.unwrap_or_else(|| "available".to_string())),
         created_at: Set(chrono::Utc::now()),
     };
 
@@ -57,6 +59,20 @@ pub async fn update_product(
         Err(DbErr::RecordNotFound("Product not found".to_string()))
     }
 }
+
+pub async fn update_product_status(
+    db: &DatabaseConnection,
+    product_id: uuid::Uuid,
+    new_status: String,
+) -> Result<(), DbErr> {
+    if let Some(product) = products::Entity::find_by_id(product_id).one(db).await? {
+        let mut active_model: products::ActiveModel = product.into();
+        active_model.status = Set(new_status);
+        active_model.update(db).await?;
+    }
+    Ok(())
+}
+
 pub async fn delete_product(
     db: &DatabaseConnection,
     product_id: uuid::Uuid,

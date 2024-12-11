@@ -33,25 +33,25 @@ pub struct CreateProductRequest {
     description: Option<String>,
     #[serde_as(as = "FromInto<Decimal>")]
     price: Decimal,
-    // status: Option<String>,
+    status: Option<String>,
 }
 
 pub async fn create_product(
     data: web::Json<CreateProductRequest>,
     db: web::Data<DatabaseConnection>
 ) -> HttpResponse {
-    // let valid_statuses = vec!["available", "reserved", "sold"];
-    // if let Some(status) = &data.status {
-    //     if !valid_statuses.contains(&status.as_str()) {
-    //         return HttpResponse::BadRequest().body(format!("Invalid status: {}", status));
-    //     }
-    // }
+    let valid_statuses = vec!["available", "reserved", "sold"];
+    if let Some(status) = &data.status {
+        if !valid_statuses.contains(&status.as_str()) {
+            return HttpResponse::BadRequest().body(format!("Invalid status: {}", status));
+        }
+    }
     match product_service::create_product(
         &db,
         data.name.clone(),
         data.description.clone(),
         data.price,
-        // data.status.clone(),
+        data.status.clone(),
     ).await {
         Ok(product) => HttpResponse::Ok().json(product),
         Err(_) => HttpResponse::InternalServerError().body("Error creating product"),
@@ -84,5 +84,28 @@ pub async fn delete_product(
         Ok(_) => HttpResponse::Ok().body("Product deleted successfully"),
         Err(sea_orm::DbErr::RecordNotFound(err)) => HttpResponse::NotFound().body(err),
         Err(_) => HttpResponse::InternalServerError().body("Error deleting product"),
+    }
+}
+
+#[derive(Deserialize)]
+pub struct UpdateProductStatusRequest {
+    pub status: String,
+}
+
+pub async fn update_product_status(
+    product_id: web::Path<Uuid>,
+    data: web::Json<UpdateProductStatusRequest>,
+    db: web::Data<DatabaseConnection>,
+) -> HttpResponse {
+    let valid_statuses = vec!["available", "reserved", "sold"];
+
+    if !valid_statuses.contains(&&data.status.as_str()) {
+        return HttpResponse::BadRequest().body(format!("Invalid status: {}", data.status));
+    }
+
+    match product_service::update_product_status(&db, product_id.into_inner(), data.status.clone()).await {
+        Ok(_) => HttpResponse::Ok().body("Product status updated successfully"),
+        Err(sea_orm::DbErr::RecordNotFound(err)) => HttpResponse::NotFound().body(err),
+        Err(_) => HttpResponse::InternalServerError().body("Error updating product status"),
     }
 }
