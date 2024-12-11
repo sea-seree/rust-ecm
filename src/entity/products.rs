@@ -10,6 +10,7 @@ pub struct Model {
     pub name: String,
     pub description: Option<String>,
     pub price: Decimal,
+    // pub status: String, // เพิ่มฟิลด์ status
     pub created_at: DateTimeUtc,
 }
 

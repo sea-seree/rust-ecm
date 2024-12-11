@@ -33,17 +33,25 @@ pub struct CreateProductRequest {
     description: Option<String>,
     #[serde_as(as = "FromInto<Decimal>")]
     price: Decimal,
+    // status: Option<String>,
 }
 
 pub async fn create_product(
     data: web::Json<CreateProductRequest>,
     db: web::Data<DatabaseConnection>
 ) -> HttpResponse {
+    // let valid_statuses = vec!["available", "reserved", "sold"];
+    // if let Some(status) = &data.status {
+    //     if !valid_statuses.contains(&status.as_str()) {
+    //         return HttpResponse::BadRequest().body(format!("Invalid status: {}", status));
+    //     }
+    // }
     match product_service::create_product(
         &db,
         data.name.clone(),
         data.description.clone(),
-        data.price
+        data.price,
+        // data.status.clone(),
     ).await {
         Ok(product) => HttpResponse::Ok().json(product),
         Err(_) => HttpResponse::InternalServerError().body("Error creating product"),

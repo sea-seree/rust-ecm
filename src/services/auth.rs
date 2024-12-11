@@ -9,6 +9,12 @@ pub struct Claims {
     exp: usize,
 }
 
+impl Claims {
+    pub fn get_sub(&self) -> &str {
+        &self.sub
+    }
+}
+
 pub fn hash_password(password: &str) -> String {
     hash(password, 4).expect("Failed to hash password")
 }
