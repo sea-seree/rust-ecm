@@ -3,7 +3,7 @@ use crate::services::auth::{generate_jwt, hash_password, verify_password};
 use actix_web::{web, HttpResponse};
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
 use serde::Deserialize;
-use crate::error::AppError;
+use crate::error::ApiError;
 
 #[derive(Deserialize)]
 pub struct RegisterData {
@@ -15,7 +15,7 @@ pub struct RegisterData {
 pub async fn register(
     data: web::Json<RegisterData>,
     db: web::Data<DatabaseConnection>,
-) -> Result<HttpResponse, AppError> {
+) -> Result<HttpResponse, ApiError> {
     let hashed_password = hash_password(&data.password)?;
     let new_user = ActiveModel {
         id: Set(uuid::Uuid::new_v4()),
@@ -36,7 +36,7 @@ pub async fn register(
     new_user
         .insert(&**db)
         .await
-        .map_err(|_| AppError::DatabaseError("Failed to create user".to_string()))?;
+        .map_err(|_| ApiError::DatabaseError("Failed to create user".to_string()))?;
 
     Ok(HttpResponse::Ok().body("User registered successfully"))
 }
@@ -47,7 +47,7 @@ pub struct LoginData {
     pub password: String,
 }
 
-pub async fn login(data: web::Json<LoginData>, db: web::Data<DatabaseConnection>) -> Result<HttpResponse, AppError> {
+pub async fn login(data: web::Json<LoginData>, db: web::Data<DatabaseConnection>) -> Result<HttpResponse, ApiError> {
     if let Some(users) = users::Entity::find()
         .filter(users::Column::Username.eq(data.username.clone()))
         .one(&**db)
@@ -60,5 +60,5 @@ pub async fn login(data: web::Json<LoginData>, db: web::Data<DatabaseConnection>
         }
     }
 
-    Err(AppError::AuthenticationError("Invalid credentials".to_string()))
+    Err(ApiError::AuthenticationError("Invalid credentials".to_string()))
 }

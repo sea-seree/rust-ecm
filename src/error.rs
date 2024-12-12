@@ -6,7 +6,7 @@ use serde::Serialize;
 #[derive(Debug, Display)]
 
 //สร้าง enum ก่อนว่าเราจะใช้งานอะไรบ้าง
-pub enum AppError {
+pub enum ApiError {
     #[display("Database error: {}", _0)]
     DatabaseError(String),
 
@@ -24,36 +24,36 @@ pub enum AppError {
 }
 
 // implement error trait ของ DB error
-impl From<DbErr> for AppError {
+impl From<DbErr> for ApiError {
     fn from(err: DbErr) -> Self {
         match err {
-            DbErr::RecordNotFound(msg) => AppError::NotFound(msg),
-            _ => AppError::DatabaseError(err.to_string()),
+            DbErr::RecordNotFound(msg) => ApiError::NotFound(msg),
+            _ => ApiError::DatabaseError(err.to_string()),
         }
     }
 }
 
 // implement error trait ของ Response
-impl error::ResponseError for AppError {
+impl error::ResponseError for ApiError {
     fn error_response(&self) -> HttpResponse {
         let error_response = match self {
-            AppError::DatabaseError(message) => ErrorResponse {
+            ApiError::DatabaseError(message) => ErrorResponse {
                 error: "DatabaseError".to_string(),
                 message: message.clone(),
             },
-            AppError::ValidationError(message) => ErrorResponse {
+            ApiError::ValidationError(message) => ErrorResponse {
                 error: "ValidationError".to_string(),
                 message: message.clone(),
             },
-            AppError::NotFound(message) => ErrorResponse {
+            ApiError::NotFound(message) => ErrorResponse {
                 error: "NotFound".to_string(),
                 message: message.clone(),
             },
-            AppError::AuthenticationError(message) => ErrorResponse {
+            ApiError::AuthenticationError(message) => ErrorResponse {
                 error: "AuthenticationError".to_string(),
                 message: message.clone(),
             },
-            AppError::InternalServerError => ErrorResponse {
+            ApiError::InternalServerError => ErrorResponse {
                 error: "InternalServerError".to_string(),
                 message: "An unexpected error occurred".to_string(),
             },
@@ -64,10 +64,10 @@ impl error::ResponseError for AppError {
 
     fn status_code(&self) -> StatusCode {
         match self {
-            AppError::DatabaseError(_) | AppError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
-            AppError::ValidationError(_) => StatusCode::BAD_REQUEST,
-            AppError::NotFound(_) => StatusCode::NOT_FOUND,
-            AppError::AuthenticationError(_) => StatusCode::UNAUTHORIZED,
+            ApiError::DatabaseError(_) | ApiError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiError::ValidationError(_) => StatusCode::BAD_REQUEST,
+            ApiError::NotFound(_) => StatusCode::NOT_FOUND,
+            ApiError::AuthenticationError(_) => StatusCode::UNAUTHORIZED,
         }
     }
 }
