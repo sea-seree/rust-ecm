@@ -1,6 +1,7 @@
 use crate::entity::users::{self, ActiveModel};
 use crate::services::auth::{generate_jwt, hash_password, verify_password};
 use actix_web::{web, HttpResponse};
+use once_cell::sync::Lazy;
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
 use serde::Deserialize;
 use crate::error::ApiError;
@@ -18,11 +19,38 @@ pub struct RegisterData {
 }
 
 fn validate_password(password: &str) -> Result<(), ValidationError> {
-    let password_regex = Regex::new(r"^.{8,}$")
-        .expect("Invalid regex for password validation");
+    static LOWERCASE_REGEX: Lazy<regex::Regex> = Lazy::new(|| {
+        Regex::new(r"[a-z]").expect("Invalid lowercase regex")
+    });
+    static UPPERCASE_REGEX: Lazy<regex::Regex> = Lazy::new(|| {
+        Regex::new(r"[A-Z]").expect("Invalid uppercase regex")
+    });
+    static DIGIT_REGEX: Lazy<regex::Regex> = Lazy::new(|| {
+        Regex::new(r"\d").expect("Invalid digit regex")
+    });
 
-    if !password_regex.is_match(password) {
-        return Err(ValidationError::new(""));
+    // ตรวจสอบความยาวขั้นต่ำ
+    if password.len() < 8 {
+        return Err(ValidationError::new("Password must be at least 8 characters long"));
+    }
+
+    // ตรวจสอบตัวอักษรพิมพ์เล็ก
+    if !LOWERCASE_REGEX.is_match(password) {
+        return Err(ValidationError::new(
+            "Password must contain at least one lowercase letter",
+        ));
+    }
+
+    // ตรวจสอบตัวอักษรพิมพ์ใหญ่
+    if !UPPERCASE_REGEX.is_match(password) {
+        return Err(ValidationError::new(
+            "Password must contain at least one uppercase letter",
+        ));
+    }
+
+    // ตรวจสอบตัวเลข
+    if !DIGIT_REGEX.is_match(password) {
+        return Err(ValidationError::new("Password must contain at least one digit"));
     }
 
     Ok(())
