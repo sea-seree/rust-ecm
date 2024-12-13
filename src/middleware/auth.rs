@@ -1,8 +1,6 @@
-use crate::services::auth::Claims;
+use crate::{config::AppConfig, services::auth::Claims};
 use actix_web::{
-    body::BoxBody,
-    dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    Error, HttpMessage, HttpResponse,
+    body::BoxBody, dev::{Service, ServiceRequest, ServiceResponse, Transform}, web, Error, HttpMessage, HttpResponse
 };
 use futures_util::future::{ok, LocalBoxFuture, Ready};
 use jsonwebtoken::{decode, DecodingKey, Validation};
@@ -54,16 +52,29 @@ where
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let service = self.service.clone();
 
+        let config = req.app_data::<web::Data<AppConfig>>().cloned();
+
         Box::pin(async move {
             if req.path().starts_with("/auth") {
                 return service.call(req).await.map(|res| res.map_into_boxed_body());
             }
+
+            let secret = match config {
+                Some(cfg) => cfg.jwt_secret.clone(),
+                None => {
+                    return Ok(req.into_response(
+                        HttpResponse::InternalServerError()
+                            .body("Configuration error")
+                            .map_into_boxed_body(),
+                    ));
+                }
+            };
+
             // ตรวจสอบ Header Authorization
             if let Some(auth_header) = req.headers().get("Authorization") {
                 if let Ok(auth_str) = auth_header.to_str() {
                     if auth_str.starts_with("Bearer ") {
                         let token = &auth_str[7..];
-                        let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET not set");
 
                         // ตรวจสอบ JWT Token
                         match decode::<Claims>(
