@@ -5,12 +5,12 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "products")]
 pub struct Model {
-    #[sea_orm(primary_key)]
+    #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
     pub name: String,
     pub description: Option<String>,
     pub price: Decimal,
-    pub status: String, // เพิ่มฟิลด์ status
+    pub status: String,
     pub created_at: DateTimeUtc,
 }
 
@@ -18,6 +18,20 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(has_many = "super::cart::Entity")]
     Cart,
+    #[sea_orm(has_many = "super::order_items::Entity")]
+    OrderItems,
+}
+
+impl Related<super::cart::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Cart.def()
+    }
+}
+
+impl Related<super::order_items::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::OrderItems.def()
+    }
 }
 
 impl ActiveModelBehavior for ActiveModel {}

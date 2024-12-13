@@ -62,10 +62,61 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             )
             .await?;
+
+            manager
+            .create_table(
+                Table::create()
+                    .table(Orders::Table)
+                    .if_not_exists()
+                    .col(ColumnDef::new(Orders::Id).uuid().not_null().primary_key())
+                    .col(ColumnDef::new(Orders::UserId).uuid().not_null())
+                    .col(ColumnDef::new(Orders::TotalPrice).decimal().not_null())
+                    .col(ColumnDef::new(Orders::Status).string().not_null().default("pending"))
+                    .col(ColumnDef::new(Orders::CreatedAt).timestamp_with_time_zone().not_null())
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(Orders::Table, Orders::UserId)
+                            .to(Users::Table, Users::Id)
+                            .on_delete(ForeignKeyAction::Cascade),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        // Create OrderItems Table
+        manager
+            .create_table(
+                Table::create()
+                    .table(OrderItems::Table)
+                    .if_not_exists()
+                    .col(ColumnDef::new(OrderItems::Id).uuid().not_null().primary_key())
+                    .col(ColumnDef::new(OrderItems::OrderId).uuid().not_null())
+                    .col(ColumnDef::new(OrderItems::ProductId).uuid().not_null())
+                    .col(ColumnDef::new(OrderItems::Quantity).integer().not_null())
+                    .col(ColumnDef::new(OrderItems::Price).decimal().not_null())
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(OrderItems::Table, OrderItems::OrderId)
+                            .to(Orders::Table, Orders::Id)
+                            .on_delete(ForeignKeyAction::Cascade),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(OrderItems::Table, OrderItems::ProductId)
+                            .to(Products::Table, Products::Id)
+                            .on_delete(ForeignKeyAction::Cascade),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
         Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager.drop_table(Table::drop().table(OrderItems::Table).to_owned()).await?;
+        // Drop Orders Table
+        manager.drop_table(Table::drop().table(Orders::Table).to_owned()).await?;
         // Drop Cart Table
         manager.drop_table(Table::drop().table(Cart::Table).to_owned()).await?;
         // Drop Products Table
@@ -104,4 +155,24 @@ pub enum Cart {
     UserId,
     ProductId,
     Quantity,
+}
+
+#[derive(Iden)]
+pub enum Orders {
+    Table,
+    Id,
+    UserId,
+    TotalPrice,
+    Status,
+    CreatedAt,
+}
+
+#[derive(Iden)]
+pub enum OrderItems {
+    Table,
+    Id,
+    OrderId,
+    ProductId,
+    Quantity,
+    Price,
 }

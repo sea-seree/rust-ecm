@@ -103,6 +103,6 @@ pub async fn delete_product(db: &DatabaseConnection, product_id: Uuid) -> Result
         .delete(db)
         .await
         .map_err(|_| ApiError::DatabaseError("Failed to delete product".to_string()))?;
-    
+
     Ok(())
 }
