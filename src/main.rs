@@ -48,6 +48,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(db.clone()))
             .configure(routes::configure_auth_routes)
             .configure(routes::configure_product_routes)
+            .configure(routes::configure_cart_routes)
             .wrap(AuthMiddleware)
     })
     .bind("127.0.0.1:8080")?
