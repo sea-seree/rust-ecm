@@ -4,18 +4,40 @@ use actix_web::{web, HttpResponse};
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
 use serde::Deserialize;
 use crate::error::ApiError;
+use validator::{Validate, ValidationError};
+use regex::Regex;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Validate)]
 pub struct RegisterData {
+    #[validate(length(min = 1, max = 15, message = "must be 1 - 15 characters long"))]
     pub username: String,
+    #[validate(email(message = "invalid"))]
     pub email: String,
+    #[validate(custom(function = "validate_password", message = "invalid"), )]
     pub password: String,
 }
+
+fn validate_password(password: &str) -> Result<(), ValidationError> {
+    let password_regex = Regex::new(r"^.{8,}$")
+        .expect("Invalid regex for password validation");
+
+    if !password_regex.is_match(password) {
+        return Err(ValidationError::new(""));
+    }
+
+    Ok(())
+}
+
 
 pub async fn register(
     data: web::Json<RegisterData>,
     db: web::Data<DatabaseConnection>,
 ) -> Result<HttpResponse, ApiError> {
+    match data.validate() {
+        Ok(_) => (),
+        Err(e) => return Err(ApiError::ValidationError(e.to_string())),
+    }
+
     let hashed_password = hash_password(&data.password)?;
     let new_user = ActiveModel {
         id: Set(uuid::Uuid::new_v4()),
